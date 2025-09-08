@@ -40,4 +40,12 @@ for i in *fastq.gz; do docker run --rm -it   -v $(pwd):/data   -w /data   quay.i
 minimap2 -y -t 32 -ax splice -uf -k 14 Homo_sapiens.GRCh38.dna.primary_assembly.fa  $i > $i.sam ; done
 ```
 
+## Running IsoQuant
+
+Isoquant can be installed via `mamba`. This is the command I am runnning as a first test: 
+
+ ```
+isoquant.py --threads 16 -d nanopore --bam SGNex_K562_directRNA_replicate1_run1.sorted.bam  --reference /weka/projects/references/sync_structure/genomes/Homo_sapiens/Ensembl/GRCh38/Sequence/WholeGenomeFasta/Homo_sapiens.GRCh38.dna.primary_assembly.fa --genedb /weka/projects/references/sync_structure/genomes/Homo_sapiens/Ensembl/GRCh38/Annotation/Genes/Homo_sapiens.GRCh38.108.gtf --complete_genedb  --output K562_directRNA_replicate1_run1
+```
+
 ## Illumina short read data
