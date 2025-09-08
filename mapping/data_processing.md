@@ -24,18 +24,20 @@ Unusable reads:         12.21%
 
 ### Alignment using minimap2
 
-```
-minimap2 -y -t 32 -ax splice -uf -k 14 ${reference} ${input} > ${id}.sam
-```
+For the time being I am using the same mapping command for both direct RNA and cDNA:
 
 ```
-docker run --rm -it \
-  -v $(pwd):/data \
-  -w /data \
-  quay.io/biocontainers/minimap2:2.30--h577a1d6_0 \
-  minimap2 -y -t 32 -ax splice -uf -k 14 reference.fasta sample.fastq > sample.sam
+for i in *fastq.gz; do docker run --rm -it   -v $(pwd):/data   -w /data   quay.io/biocontainers/minimap2:2.30--h577a1d6_0
+minimap2 -y -t 32 -ax splice -uf -k 14 Homo_sapiens.GRCh38.dna.primary_assembly.fa  $i > $i.sam ; done
 ```
 
-## ONT direct RNA sequencoing data
+## ONT direct RNA sequencing data
+
+For the time being I am using the same mapping command for both direct RNA and cDNA (no chopping at this point)
+
+```
+for i in *fastq.gz; do docker run --rm -it   -v $(pwd):/data   -w /data   quay.io/biocontainers/minimap2:2.30--h577a1d6_0
+minimap2 -y -t 32 -ax splice -uf -k 14 Homo_sapiens.GRCh38.dna.primary_assembly.fa  $i > $i.sam ; done
+```
 
 ## Illumina short read data
