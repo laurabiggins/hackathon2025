@@ -13,6 +13,15 @@ pychopper -t 32 -U -r sample_report.pdf -k PCS109 -u SGNex_K562_cDNA_replicate3_
 -w SGNex_K562_cDNA_replicate3_run4_rescued_reads.fastq SGNex_K562_cDNA_replicate3_run4.fastq.gz SGNex_K562_cDNA_replicate3_run4_full_length_reads.fastq 
 ```
 
+**Output:**
+```
+-----------------------------------
+Reads with two primers: 86.54% (with UMI 0.09%)
+Rescued reads:          1.24%
+Unusable reads:         12.21%
+-----------------------------------
+```
+
 ### Alignment using minimap2
 
 ```
