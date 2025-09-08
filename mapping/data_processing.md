@@ -45,7 +45,7 @@ Unusable reads:         12.21%
 
 ### Alignment using minimap2
 
-For the time being I am using the same mapping command for both direct RNA and cDNA:
+For the time being I am using the same mapping command for both direct RNA and cDNA. As far as we can tell, the direct RNA data did not use a barcoding kit, and can thus be aligned straight away:
 
 ```
 for i in *fastq.gz; do docker run --rm -it   -v $(pwd):/data   -w /data   quay.io/biocontainers/minimap2:2.30--h577a1d6_0
