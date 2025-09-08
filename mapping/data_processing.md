@@ -1,3 +1,24 @@
+The following data was picked for our evaluation:
+
+```
+Sample	Sequencing platform	Sequencing flowcell	Barcoding kit	Sequencing kit	
+SGNex_H9_cDNA_replicate2_run4	promethion	FLO-PRO002	SQK-PCB109	SQK-PCB109	cDNA
+SGNex_H9_cDNA_replicate3_run4	promethion	FLO-PRO002	SQK-PCB109	SQK-PCB109	cDNA
+SGNex_K562_cDNA_replicate1_run3	minion	FLO-MIN106	NA	SQK-PCS108	cDNA
+SGNex_K562_cDNA_replicate3_run4	gridion	FLO-MIN106D	NA	SQK-PCS109	cDNA
+					
+SGNex_H9_Illumina_replicate2_run1					short
+SGNex_H9_Illumina_replicate3_run1					short
+SGNex_K562_Illumina_replicate3_run1					short
+SGNex_K562_Illumina_replicate4_run1					short
+					
+SGNex_H9_directRNA_replicate2_run1					
+GNex_H9_directRNA_replicate3_run1					
+SGNex_K562_directRNA_replicate1_run1					
+SGNex_K562_directRNA_replicate4_run1					
+```
+**Note below:** PCB109 and PCB111 share same adapter sequences.
+
 ## ONT cDNA demux data
 
 ### Pychopper command for H9 (hES)
