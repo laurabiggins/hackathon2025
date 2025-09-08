@@ -107,3 +107,63 @@ seqname gene_id event_id        alternative_transcripts total_transcripts
 ```
 
 On top of that, we have `.gtf` files that will aid in visualisation process of the different local alternative splicing (AS) events.
+
+
+# 3. Generate a SUPPA2-compatible transcript matrix
+
+We ran the `nf-core/rnaseq` pipeline on 4 samples of our choice (2 replicates of 2 cell lines) using default parameters. Version of the pipeline was 3.18.0. Alignment was done with `STAR` followed by quantification with `salmon`. 
+
+The nf-core pipeline will generate the relevant outputs inside the `star_salmon` folder. `SUPPA2` requires a TPM quantification of the different transcripts, which are available in the `salmon.merged.transcript_tpm.tsv` file. This is how that file looks like:
+
+```
+tx      gene_id SGNex_H9_Illumina_replicate2_run1       SGNex_H9_Illumina_replicate3_run1       SGNex_K562_Illumina_replicate3_run1     SGNex_K562_Illumina_replicate4_run1
+ENST00000456328 ENSG00000290825 0.023964        0.027742        0.188112        0
+ENST00000450305 ENSG00000223972 0       0       0       0
+ENST00000488147 ENSG00000227232 6.946638        6.280138        25.225222       29.855285
+ENST00000619216 ENSG00000278267 0       0       0       1.12798
+ENST00000473358 ENSG00000243485 0       0       0       0.190257
+ENST00000469289 ENSG00000243485 0       0.199847        0       0
+ENST00000607096 ENSG00000284332 0       0       0       0
+ENST00000417324 ENSG00000237613 0       0       0       0
+ENST00000461467 ENSG00000237613 0       0       0       0
+```
+
+However, the file format for multi-sample matrices needs to be the following:
+
+```
+sample1 sample2 sample3 sample4
+transcript1 <expression>  <expression>  <expression>  <expression>
+transcript2 <expression>  <expression>  <expression>  <expression>
+transcript3 <expression>  <expression>  <expression>  <expression>
+```
+
+Therefore, we'll need to remove column 2 and remove the header of the first column with this one-liner:
+
+```
+cut -f1,3- salmon.merged.transcript_tpm.tsv | sed '1s/tx\t//' > salmon.merged.transcript_tpm.suppa2_compatible.tsv
+```
+
+This is the output file:
+
+```
+SGNex_H9_Illumina_replicate2_run1       SGNex_H9_Illumina_replicate3_run1       SGNex_K562_Illumina_replicate3_run1     SGNex_K562_Illumina_replicate4_run1
+ENST00000456328 0.023964        0.027742        0.188112        0
+ENST00000450305 0       0       0       0
+ENST00000488147 6.946638        6.280138        25.225222       29.855285
+ENST00000619216 0       0       0       1.12798
+ENST00000473358 0       0       0       0.190257
+ENST00000469289 0       0.199847        0       0
+ENST00000607096 0       0       0       0
+ENST00000417324 0       0       0       0
+ENST00000461467 0       0       0       0
+```
+
+Ready for PSI quantifications!
+
+# 4. PSI quantification per isoform
+
+Let's calculate the PSI metrics at the isoform level:
+
+```
+
+```
