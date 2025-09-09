@@ -1,7 +1,8 @@
 In this docuemnt:
-[ONT cDNA](#ont-cdna-demux=data)
-[ONT directRNA](#ONT-direct-RNA-sequencing-data)
-[ISOQUANT](#running-isoquant)
+
+- [ONT cDNA](#ont-cdna-demux=data)
+- [ONT directRNA](#ONT-direct-RNA-sequencing-data)
+- [ISOQUANT](#running-isoquant)
 
 The following data was picked for our evaluation:
 
