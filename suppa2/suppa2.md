@@ -1,4 +1,6 @@
-# 1. Installation
+# SUPPA2 evaluation
+
+## 1. Installation
 
 Clone from GitHub repository hosted here: [https://github.com/comprna/SUPPA](https://github.com/comprna/SUPPA)
 
@@ -37,13 +39,15 @@ micromamba activate suppa2_env
 ```
 
 
-# 2. Creating transcript events and local alternative splicing events files
+## 2. Creating transcript events and local alternative splicing events files
 
 First, copy the relevant GTF file:
 
 ```
 aws s3 cp s3://altos-lab-reference-data/genomes/Homo_sapiens/Ensembl/GRCh38/Annotation/Genes/Homo_sapiens.GRCh38.108.gtf .
 ```
+
+#### 2.1. Transcript events file (`.ioi`)
 
 Then generate the transcript events file first (`.ioi` file):
 
@@ -65,6 +69,8 @@ seqname gene_id isoform_id      inclusion_transcripts   total_transcripts
 1       ENSG00000228037 ENSG00000228037;ENST00000424215 ENST00000424215 ENST00000424215
 1       ENSG00000142611 ENSG00000142611;ENST00000511072 ENST00000511072 ENST00000511072,ENST00000607632,ENST00000378391,ENST00000270722,ENST00000514189,ENST00000512462,ENST00000463591,ENST00000509860,ENST00000378389,ENST00000606170
 ```
+
+#### 2.1. Local alternative splicing (AS) files (`.ioe`)
 
 Next, generate the local alternative splicing (AS) events file:
 
@@ -91,7 +97,7 @@ Homo_sapiens.GRCh38.108_SE_strict.gtf
 Homo_sapiens.GRCh38.108_SE_strict.ioe
 ```
 
-The general structure of the `.ioe` files is the following:
+The general structure of the `.ioe` files is the following, as exemplied by the retained intron (`RI`) file:
 
 ```
 seqname gene_id event_id        alternative_transcripts total_transcripts
@@ -109,7 +115,7 @@ seqname gene_id event_id        alternative_transcripts total_transcripts
 On top of that, we have `.gtf` files that will aid in visualisation process of the different local alternative splicing (AS) events.
 
 
-# 3. Generate a SUPPA2-compatible transcript matrix
+## 3. Generate SUPPA2-compatible transcript matrices
 
 We ran the `nf-core/rnaseq` pipeline on 4 samples of our choice (2 replicates of 2 cell lines) using default parameters. Version of the pipeline was 3.18.0. Alignment was done with `STAR` followed by quantification with `salmon`. 
 
@@ -158,12 +164,92 @@ ENST00000417324 0       0       0       0
 ENST00000461467 0       0       0       0
 ```
 
-Ready for PSI quantifications!
-
-# 4. PSI quantification per isoform
-
-Let's calculate the PSI metrics at the isoform level:
+Lastly, we need to separate them by experimental conditions, that is, by cell line (H9 vs. K562). I'll run a simple awk command to do that:
 
 ```
+awk 'BEGIN {OFS="\t"} NR==1 {print "SGNex_H9_Illumina_replicate2_run1", "SGNex_H9_Illumina_replicate3_run1" > "salmon.merged.transcript_tpm.suppa2_compatible.H9_samples.tsv"; print "SGNex_K562_Illumina_replicate3_run1", "SGNex_K562_Illumina_replicate4_run1" > "salmon.merged.transcript_tpm.suppa2_compatible.K562_samples.tsv"} NR>1 {print $1, $2, $3 > "salmon.merged.transcript_tpm.suppa2_compatible.H9_samples.tsv"; print $1, $4, $5 > "salmon.merged.transcript_tpm.suppa2_compatible.K562_samples.tsv"}' salmon.merged.transcript_tpm.suppa2_compatible.tsv
+```
 
+Ready for PSI quantifications!
+
+## 4. PSI quantification
+
+#### 4.1. Per isoform
+
+Let's calculate the PSI metrics at the isoform level for both cell lines:
+
+```
+for cell_line in H9 K562; do
+  echo "---Processing $cell_line...---"
+  python ~/GitHub/SUPPA/suppa.py psiPerIsoform -g Homo_sapiens.GRCh38.108.gtf -e salmon.merged.transcript_tpm.suppa2_compatible.${cell_line}_samples.tsv -o salmon_${cell_line}
+done
+```
+
+This is the structure of the output files, exemplified by the H9 cell line `salmon.psi_H9_isoform.psi` file:
+
+```
+SGNex_H9_Illumina_replicate2_run1       SGNex_H9_Illumina_replicate3_run1
+ENSG00000160072;ENST00000673477 0.0556391486741741      0.058875536887111043
+ENSG00000160072;ENST00000308647 0.36907428557689037     0.404610619197373
+ENSG00000160072;ENST00000472194 0.061046658147855815    0.0635133669560327
+ENSG00000160072;ENST00000378736 0.4245191659340324      0.36274415757212275
+ENSG00000160072;ENST00000485748 0.05599366712261248     0.07328193228536424
+ENSG00000160072;ENST00000474481 0.0337270745444348      0.03697438710199621
+ENSG00000279928;ENST00000624431 nan     nan
+ENSG00000228037;ENST00000424215 nan     nan
+ENSG00000142611;ENST00000511072 0.0     0.0
+```
+
+#### 4.2. Per local alternative splicing (AS) event
+
+Now let's calculate those metrics for all the different types of local AS events for which we have generated `.ioe` files beforehand, for both cell lines:
+
+```
+for cell_line in H9 K562; do
+  echo "---Processing $cell_line...---"
+  for event_type in A3 A5 AF AL MX RI SE; do
+      echo "Processing $event_type events..."
+      python ~/GitHub/SUPPA/suppa.py psiPerEvent \
+          --ioe-file Homo_sapiens.GRCh38.108_${event_type}_strict.ioe \
+          --expression-file salmon.merged.transcript_tpm.suppa2_compatible.${cell_line}_samples.tsv \
+          -o salmon_${cell_line}_${event_type}
+  done
+done
+```
+
+This is the structure of one of the output files, as exemplified by the retained intron (`RI`) file for the H9 cell line:
+
+```
+SGNex_H9_Illumina_replicate2_run1       SGNex_H9_Illumina_replicate3_run1
+ENSG00000000419;RI:20:50945737:50945762-50945847:50945923:-     0.01234349198627487     0.007421823408974324
+ENSG00000000971;RI:1:196740619:196740720-196741875:196742051:+  nan     nan
+ENSG00000000971;RI:1:196740619:196740792-196741875:196742051:+  nan     nan
+ENSG00000000971;RI:1:196740619:196740792-196741881:196742051:+  nan     nan
+ENSG00000000971;RI:1:196740619:196741554-196741875:196742051:+  nan     nan
+ENSG00000001497;RI:X:65517987:65518073-65520702:65522285:-      nan     nan
+ENSG00000001497;RI:X:65517987:65518465-65520702:65522285:-      0.0     0.0
+ENSG00000001497;RI:X:65520702:65520817-65521148:65522285:-      0.4059796411872284      0.2821375830450722
+ENSG00000001497;RI:X:65520702:65520817-65523560:65523707:-      0.5833369574446494      0.5211951059755299
+```
+
+## 5. Differential splicing and $\Delta$PSI calculation
+
+#### 5.1. $\Delta$PSI per isoform 
+
+This gets done once only:
+
+```
+python ~/GitHub/SUPPA/suppa.py diffSplice -m empirical -p salmon_H9_isoform.psi salmon_K562_isoform.psi -e salmon.merged.transcript_tpm.suppa2_compatible.H9_samples.tsv salmon.merged.transcript_tpm.suppa2_compatible.K562_samples.tsv -i Homo_sapiens.GRCh38.108.ioi -gc -s --lower-bound 0.025 -o salmon.differential_splicing_isoform
+```
+
+This will save the average TPM
+#### 5.2. $\Delta$PSI per local alternative splicing (AS) event
+
+This gets done once per each type of alternative splicing (AS) event:
+
+```
+for event_type in A3 A5 AF AL MX RI SE; do
+  echo "Processing $event_type events..."
+  python ~/GitHub/SUPPA/suppa.py diffSplice -m empirical -p salmon_H9_${event_type}.psi salmon_K562_${event_type}.psi -e salmon.merged.transcript_tpm.suppa2_compatible.H9_samples.tsv salmon.merged.transcript_tpm.suppa2_compatible.K562_samples.tsv -i Homo_sapiens.GRCh38.108_${event_type}_strict.ioe -gc -s --lower-bound 0.025 -o salmon.differential_splicing_${event_type}
+done
 ```
